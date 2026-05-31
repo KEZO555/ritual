@@ -11,11 +11,13 @@ interface BrewTimerProps {
   onReset: () => void;
   onToggle: () => void;
   running: boolean;
+  total: number;
 }
 
 export function BrewTimer({
   elapsed,
   running,
+  total,
   onToggle,
   onReset,
   onMeasureHeight,
@@ -24,21 +26,43 @@ export function BrewTimer({
   const bg = invertColors ? "white" : "black";
   const fg = invertColors ? "black" : "white";
 
+  const progress = total > 0 ? Math.min(elapsed / total, 1) : 0;
+
   return (
     <View
       onLayout={(event) => onMeasureHeight?.(event.nativeEvent.layout.height)}
       style={[styles.container, { backgroundColor: bg, borderColor: fg }]}
     >
-      <StyledText style={styles.time}>{formatDuration(elapsed)}</StyledText>
-      <View style={styles.controls}>
-        <HapticPressable onPress={onToggle}>
-          <StyledText style={styles.control}>
-            {running ? "Pause" : "Start"}
+      <View style={styles.bar}>
+        <View style={styles.time}>
+          <StyledText style={styles.elapsed}>
+            {formatDuration(elapsed)}
           </StyledText>
-        </HapticPressable>
-        <HapticPressable onPress={onReset}>
-          <StyledText style={styles.control}>Reset</StyledText>
-        </HapticPressable>
+          {total > 0 ? (
+            <StyledText style={styles.total}>
+              {` / ${formatDuration(total)}`}
+            </StyledText>
+          ) : null}
+        </View>
+        <View style={styles.controls}>
+          <HapticPressable onPress={onToggle}>
+            <StyledText style={styles.control}>
+              {running ? "Pause" : "Start"}
+            </StyledText>
+          </HapticPressable>
+          <HapticPressable onPress={onReset}>
+            <StyledText style={styles.control}>Reset</StyledText>
+          </HapticPressable>
+        </View>
+      </View>
+      <View style={styles.progressTrack}>
+        <View style={[styles.progressBase, { backgroundColor: fg }]} />
+        <View
+          style={[
+            styles.progressFill,
+            { backgroundColor: fg, width: `${progress * 100}%` },
+          ]}
+        />
       </View>
     </View>
   );
@@ -47,17 +71,28 @@ export function BrewTimer({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
+    paddingTop: n(8),
+    borderBottomWidth: n(1),
+  },
+  bar: {
+    width: "100%",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: n(8),
-    paddingBottom: n(12),
+    paddingBottom: n(10),
     paddingLeft: n(37),
     paddingRight: n(46),
-    borderBottomWidth: n(1),
   },
   time: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  elapsed: {
     fontSize: n(40),
+  },
+  total: {
+    fontSize: n(18),
+    opacity: 0.5,
   },
   controls: {
     flexDirection: "row",
@@ -65,5 +100,20 @@ const styles = StyleSheet.create({
   },
   control: {
     fontSize: n(22),
+  },
+  progressTrack: {
+    width: "100%",
+    height: n(2),
+    position: "relative",
+  },
+  progressBase: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.2,
+  },
+  progressFill: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
   },
 });

@@ -32,12 +32,6 @@ import { useBrewTimer } from "@/hooks/useBrewTimer";
 import { useScrollIndicator } from "@/hooks/useScrollIndicator";
 import { n } from "@/utils/scaling";
 
-// ScrollView sticky index counts rendered children. The "Without a scale"
-// section (toggle + visual) adds two children, and it only renders for
-// AeroPress, so the timer sits two positions earlier for other methods.
-const STICKY_TIMER_INDEX_AEROPRESS = 6;
-const STICKY_TIMER_INDEX_OTHER = 4;
-
 function Spec({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.spec}>
@@ -56,7 +50,8 @@ export default function RecipeScreen() {
 
   const { invertColors } = useInvertColors();
   const { width } = useWindowDimensions();
-  const { elapsed, running, activeIndex, toggle, reset } = useBrewTimer(steps);
+  const { elapsed, running, activeIndex, toggle, reset, seek, total } =
+    useBrewTimer(steps, recipe?.totalSeconds ?? 0);
   const [showNoScale, setShowNoScale] = useState(false);
 
   const {
@@ -70,7 +65,6 @@ export default function RecipeScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const scrollWrapperRef = useRef<View>(null);
   const stepRefs = useRef<(View | null)[]>([]);
-  const timerHeight = useRef(0);
   const scrollOffset = useRef(0);
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -78,8 +72,11 @@ export default function RecipeScreen() {
     handleScroll(event);
   };
 
+  // Keep the active step parked just under the pinned timer as the brew
+  // advances. The timer lives outside the scroll wrapper, so the wrapper's
+  // top already sits below it and we only need a small breathing margin.
   useEffect(() => {
-    if (!running || activeIndex < 0) {
+    if (activeIndex < 0) {
       return;
     }
     const node = stepRefs.current[activeIndex];
@@ -90,12 +87,12 @@ export default function RecipeScreen() {
     node.measure((_x, _y, _w, _h, _px, pageY) => {
       wrapper.measure((_wx, _wy, _ww, _wh, _wpx, wrapperPageY) => {
         const stepTopInViewport = pageY - wrapperPageY;
-        const delta = stepTopInViewport - timerHeight.current - n(8);
+        const delta = stepTopInViewport - n(16);
         const target = Math.max(scrollOffset.current + delta, 0);
         scrollRef.current?.scrollTo({ y: target, animated: true });
       });
     });
-  }, [running, activeIndex]);
+  }, [activeIndex]);
 
   if (!recipe) {
     return (
@@ -110,10 +107,6 @@ export default function RecipeScreen() {
       ? Math.round((recipe.waterGrams / recipe.coffeeGrams) * 10) / 10
       : null;
   const accent = invertColors ? "black" : "white";
-  const stickyTimerIndex =
-    recipe.method === "aeropress"
-      ? STICKY_TIMER_INDEX_AEROPRESS
-      : STICKY_TIMER_INDEX_OTHER;
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -136,6 +129,13 @@ export default function RecipeScreen() {
             onPress: () => toggleFavorite(recipe.id),
           }}
         />
+        <BrewTimer
+          elapsed={elapsed}
+          onReset={reset}
+          onToggle={toggle}
+          running={running}
+          total={total}
+        />
         <View ref={scrollWrapperRef} style={styles.scrollWrapper}>
           <Animated.ScrollView
             contentContainerStyle={[styles.content, { width }]}
@@ -148,7 +148,6 @@ export default function RecipeScreen() {
             ref={scrollRef}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
-            stickyHeaderIndices={[stickyTimerIndex]}
             style={styles.scroll}
           >
             <StyledText style={[styles.row, styles.author]}>
@@ -198,19 +197,11 @@ export default function RecipeScreen() {
               </>
             ) : null}
             <StyledText style={[styles.row, styles.sectionTitle]}>
-              Brew
+              Steps
             </StyledText>
-            <BrewTimer
-              elapsed={elapsed}
-              onMeasureHeight={(height) => {
-                timerHeight.current = height;
-              }}
-              onReset={reset}
-              onToggle={toggle}
-              running={running}
-            />
             <BrewSteps
               activeIndex={activeIndex}
+              onSeek={seek}
               onStepRef={(index, node) => {
                 stepRefs.current[index] = node;
               }}

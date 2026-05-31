@@ -1,34 +1,46 @@
 import { StyleSheet, View } from "react-native";
+import { HapticPressable } from "@/components/HapticPressable";
 import { StyledText } from "@/components/StyledText";
 import { formatDuration, type Step } from "@/data/recipes";
 import { n } from "@/utils/scaling";
 
 interface BrewStepsProps {
   activeIndex: number;
+  onSeek?: (seconds: number) => void;
   onStepRef: (index: number, node: View | null) => void;
   steps: Step[];
 }
 
-export function BrewSteps({ steps, activeIndex, onStepRef }: BrewStepsProps) {
+export function BrewSteps({
+  steps,
+  activeIndex,
+  onSeek,
+  onStepRef,
+}: BrewStepsProps) {
   return (
     <View style={styles.steps}>
       {steps.map((step, index) => {
         const isActive = index === activeIndex;
+        const seekable = step.at !== undefined && onSeek !== undefined;
         return (
-          <View
+          <HapticPressable
+            disabled={!seekable}
             key={step.instruction}
-            ref={(node) => onStepRef(index, node)}
-            style={styles.step}
+            onPress={
+              step.at === undefined ? undefined : () => onSeek?.(step.at ?? 0)
+            }
           >
-            <StyledText style={styles.stepTime}>
-              {step.at === undefined ? "Prep" : formatDuration(step.at)}
-            </StyledText>
-            <StyledText
-              style={[styles.stepText, isActive && styles.stepTextActive]}
-            >
-              {step.instruction}
-            </StyledText>
-          </View>
+            <View ref={(node) => onStepRef(index, node)} style={styles.step}>
+              <StyledText style={styles.stepTime}>
+                {step.at === undefined ? "Prep" : formatDuration(step.at)}
+              </StyledText>
+              <StyledText
+                style={[styles.stepText, isActive && styles.stepTextActive]}
+              >
+                {step.instruction}
+              </StyledText>
+            </View>
+          </HapticPressable>
         );
       })}
     </View>
