@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   type NativeScrollEvent,
@@ -27,27 +27,73 @@ import {
   METHOD_LABELS,
   ORIENTATION_LABELS,
   ROAST_LABELS,
+  type Roast,
+  scaleRecipe,
 } from "@/data/recipes";
 import { useBrewTimer } from "@/hooks/useBrewTimer";
 import { useScrollIndicator } from "@/hooks/useScrollIndicator";
 import { triggerStepHaptic } from "@/utils/haptics";
 import { n } from "@/utils/scaling";
 
-function Spec({ label, value }: { label: string; value: string }) {
+function Spec({
+  label,
+  unit,
+  value,
+}: {
+  label: string;
+  unit?: string;
+  value: string;
+}) {
   return (
     <View style={styles.spec}>
       <StyledText style={styles.specLabel}>{label}</StyledText>
-      <StyledText style={styles.specValue}>{value}</StyledText>
+      <StyledText style={styles.specValue}>
+        {value}
+        {unit ? <StyledText style={styles.specUnit}>{unit}</StyledText> : null}
+      </StyledText>
     </View>
   );
 }
+
+const ROASTS: Roast[] = ["light", "medium", "dark"];
 
 export default function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getUserRecipe } = useUserRecipes();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const recipe = id ? (getRecipe(id) ?? getUserRecipe(id)) : undefined;
+  const original = useMemo(
+    () => (id ? (getRecipe(id) ?? getUserRecipe(id)) : undefined),
+    [id, getUserRecipe]
+  );
+
+  const [coffeeOverride, setCoffeeOverride] = useState<number | null>(null);
+  const [roastOverride, setRoastOverride] = useState<Roast | null>(null);
+
+  // Drop any adjustments when navigating to a different recipe (reset state
+  // during render, per the React docs, rather than in an effect).
+  const [prevId, setPrevId] = useState(id);
+  if (id !== prevId) {
+    setPrevId(id);
+    setCoffeeOverride(null);
+    setRoastOverride(null);
+  }
+
+  const recipe = useMemo(() => {
+    if (!original) {
+      return;
+    }
+    return scaleRecipe(
+      original,
+      coffeeOverride ?? original.coffeeGrams,
+      roastOverride ?? original.roast
+    );
+  }, [original, coffeeOverride, roastOverride]);
   const steps = recipe?.steps ?? [];
+  const modified =
+    !!original &&
+    !!recipe &&
+    (recipe.coffeeGrams !== original.coffeeGrams ||
+      recipe.roast !== original.roast);
 
   const { invertColors } = useInvertColors();
   const { width } = useWindowDimensions();
@@ -125,6 +171,16 @@ export default function RecipeScreen() {
     }
   };
 
+  const adjustCoffee = (delta: number) => {
+    setCoffeeOverride(recipe.coffeeGrams + delta);
+  };
+
+  const resetToOriginal = () => {
+    setCoffeeOverride(null);
+    setRoastOverride(null);
+    reset();
+  };
+
   return (
     <SwipeBackContainer enabled onSwipeBack={handleBack}>
       <View
@@ -167,14 +223,64 @@ export default function RecipeScreen() {
             <StyledText style={[styles.row, styles.blurb]}>
               {recipe.blurb}
             </StyledText>
+            <View style={[styles.row, styles.adjust]}>
+              <View style={styles.adjustRow}>
+                <StyledText style={styles.adjustLabel}>Coffee</StyledText>
+                <View style={styles.stepper}>
+                  <HapticPressable
+                    onPress={() => adjustCoffee(-1)}
+                    style={styles.stepButton}
+                  >
+                    <StyledText style={styles.stepSign}>−</StyledText>
+                  </HapticPressable>
+                  <StyledText style={styles.stepValue}>
+                    {recipe.coffeeGrams}
+                    <StyledText style={styles.stepUnit}>g</StyledText>
+                  </StyledText>
+                  <HapticPressable
+                    onPress={() => adjustCoffee(1)}
+                    style={styles.stepButton}
+                  >
+                    <StyledText style={styles.stepSign}>+</StyledText>
+                  </HapticPressable>
+                </View>
+              </View>
+              <View style={styles.adjustRow}>
+                <StyledText style={styles.adjustLabel}>Roast</StyledText>
+                <View style={styles.roastGroup}>
+                  {ROASTS.map((roastOption) => (
+                    <HapticPressable
+                      key={roastOption}
+                      onPress={() => setRoastOverride(roastOption)}
+                    >
+                      <StyledText
+                        style={[
+                          styles.roastOption,
+                          recipe.roast === roastOption
+                            ? styles.roastActive
+                            : styles.roastIdle,
+                        ]}
+                      >
+                        {ROAST_LABELS[roastOption]}
+                      </StyledText>
+                    </HapticPressable>
+                  ))}
+                </View>
+              </View>
+              {modified ? (
+                <HapticPressable onPress={resetToOriginal}>
+                  <StyledText style={styles.resetLink}>
+                    Reset to original
+                  </StyledText>
+                </HapticPressable>
+              ) : null}
+            </View>
             <View style={[styles.row, styles.specs]}>
-              <Spec label="Coffee" value={`${recipe.coffeeGrams}g`} />
               <Spec label="Water" value={`${recipe.waterGrams}g`} />
               <Spec label="Ratio" value={ratio === null ? "-" : `1:${ratio}`} />
-              <Spec label="Temp" value={`${recipe.waterTempC}C`} />
+              <Spec label="Temp" unit="C" value={`${recipe.waterTempC}`} />
               <Spec label="Time" value={formatDuration(recipe.totalSeconds)} />
               <Spec label="Method" value={METHOD_LABELS[recipe.method]} />
-              <Spec label="Roast" value={ROAST_LABELS[recipe.roast]} />
               <Spec label="Grind" value={GRIND_LABELS[recipe.grind]} />
               {recipe.orientation ? (
                 <Spec
@@ -272,6 +378,61 @@ const styles = StyleSheet.create({
     fontSize: n(20),
     lineHeight: n(28),
   },
+  adjust: {
+    width: "100%",
+    gap: n(18),
+  },
+  adjustRow: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: n(12),
+  },
+  adjustLabel: {
+    fontSize: n(20),
+    opacity: 0.6,
+  },
+  stepper: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: n(22),
+  },
+  stepButton: {
+    minWidth: n(34),
+    alignItems: "center",
+  },
+  stepSign: {
+    fontSize: n(34),
+  },
+  stepValue: {
+    fontSize: n(26),
+    minWidth: n(64),
+    textAlign: "center",
+  },
+  stepUnit: {
+    fontSize: n(16),
+    opacity: 0.7,
+  },
+  roastGroup: {
+    flexDirection: "row",
+    gap: n(18),
+  },
+  roastOption: {
+    fontSize: n(20),
+  },
+  roastActive: {
+    opacity: 1,
+    textDecorationLine: "underline",
+  },
+  roastIdle: {
+    opacity: 0.4,
+  },
+  resetLink: {
+    fontSize: n(18),
+    opacity: 0.6,
+    textDecorationLine: "underline",
+  },
   specs: {
     width: "100%",
     gap: n(14),
@@ -289,6 +450,10 @@ const styles = StyleSheet.create({
   },
   specValue: {
     fontSize: n(24),
+  },
+  specUnit: {
+    fontSize: n(16),
+    opacity: 0.7,
   },
   sectionTitle: {
     fontSize: n(30),

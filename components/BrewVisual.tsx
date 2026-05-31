@@ -10,29 +10,33 @@ const V60_GRAMS_PER_SCOOP = 12; // level Hario V60 measuring scoop
 const ML_PER_CHAMBER_NUMBER = 60; // approx water per molded chamber number
 const CHAMBER_NUMBERS = [1, 2, 3, 4];
 const CIRCLED = ["①", "②", "③", "④"];
-const ML_PER_FUNNEL_MARK = 100; // graduation spacing drawn on the V60 funnel
+const FUNNEL_CAPACITY_STEP = 100; // round the drawn capacity up to the next 100ml
 
-// V60 funnel silhouette (a truncated cone, wide rim down to the drip hole).
-const FUNNEL_HEIGHT = n(200);
-const FUNNEL_TOP_HALF = n(80);
-const FUNNEL_BOTTOM_HALF = n(16);
+// V60 cone geometry: a ~60-degree cone (30-degree half-angle) tapering from a
+// wide rim down to the drip hole, drawn with rib lines like a real Hario V60.
+const FUNNEL_HEIGHT = n(180);
+const FUNNEL_TOP_HALF = n(104); // half the rim width ≈ tan(30) * height
+const FUNNEL_RIM_HEIGHT = n(20);
+const FUNNEL_SIDE_PAD = n(32); // breathing room each side for the rim/label
+const RIB_LENGTH = n(210); // reaches the rim corners from the apex
+const RIB_ANGLES = [-30, -20, -10, 0, 10, 20, 30];
 
 function funnelHalfWidth(fraction: number): number {
-  return FUNNEL_BOTTOM_HALF + (FUNNEL_TOP_HALF - FUNNEL_BOTTOM_HALF) * fraction;
+  return FUNNEL_TOP_HALF * fraction;
 }
 
-// Build the border-triangle trapezoid that fills the funnel from the drip hole
-// up to a given height, matching the cone's taper.
+// Border-triangle that fills the cone from the drip hole up to a height,
+// pointing down so the apex sits at the drip hole.
 function funnelFillStyle(fraction: number, color: string) {
   const topHalf = funnelHalfWidth(fraction);
   return {
-    width: FUNNEL_BOTTOM_HALF * 2,
+    width: 0,
     height: 0,
     borderTopWidth: FUNNEL_HEIGHT * fraction,
     borderTopColor: color,
-    borderLeftWidth: topHalf - FUNNEL_BOTTOM_HALF,
+    borderLeftWidth: topHalf,
     borderLeftColor: "transparent",
-    borderRightWidth: topHalf - FUNNEL_BOTTOM_HALF,
+    borderRightWidth: topHalf,
     borderRightColor: "transparent",
   } as const;
 }
@@ -175,16 +179,10 @@ function V60Visual({
     V60_GRAMS_PER_SCOOP,
     "level Hario scoop"
   );
-  // Capacity sits one mark above the target so the fill line stays below the
-  // rim and there is always a graduation just above the water level.
+  // Capacity rounds up to the next 100ml so the fill line stays below the rim.
   const capacity =
-    (Math.floor(waterGrams / ML_PER_FUNNEL_MARK) + 1) * ML_PER_FUNNEL_MARK;
-  const markCount = capacity / ML_PER_FUNNEL_MARK;
+    (Math.floor(waterGrams / FUNNEL_CAPACITY_STEP) + 1) * FUNNEL_CAPACITY_STEP;
   const fillFraction = waterGrams / capacity;
-  const marks = Array.from(
-    { length: markCount },
-    (_, i) => (i + 1) / markCount
-  );
 
   return (
     <View style={styles.container}>
@@ -198,36 +196,36 @@ function V60Visual({
           style={styles.value}
         >{`Fill to ~${waterGrams}ml`}</StyledText>
         <StyledText style={styles.hint}>
-          {`${waterGrams}g water · Hario V60 funnel`}
+          {`${waterGrams}g water · Hario V60 dripper`}
         </StyledText>
       </View>
 
       <View style={styles.funnelRow}>
         <View style={styles.funnel}>
-          <View style={styles.funnelLayer}>
-            <View style={[funnelFillStyle(1, fg), styles.funnelBody]} />
-          </View>
-          <View style={styles.funnelLayer}>
-            <View
-              style={[funnelFillStyle(fillFraction, fg), styles.funnelWater]}
-            />
-          </View>
-          {marks.map((fraction) => (
-            <View
-              key={fraction}
-              style={[styles.funnelMark, { bottom: FUNNEL_HEIGHT * fraction }]}
-            >
+          <View style={[styles.rim, { borderColor: fg }]} />
+          <View style={styles.cone}>
+            <View style={styles.funnelLayer}>
+              <View style={[funnelFillStyle(1, fg), styles.funnelBody]} />
+            </View>
+            <View style={styles.funnelLayer}>
               <View
+                style={[funnelFillStyle(fillFraction, fg), styles.funnelWater]}
+              />
+            </View>
+            {RIB_ANGLES.map((angle) => (
+              <View
+                key={angle}
                 style={[
-                  styles.funnelMarkLine,
+                  styles.rib,
                   {
                     backgroundColor: fg,
-                    width: funnelHalfWidth(fraction) * 2,
+                    opacity: Math.abs(angle) === 30 ? 0.7 : 0.22,
+                    transform: [{ rotate: `${angle}deg` }],
                   },
                 ]}
               />
-            </View>
-          ))}
+            ))}
+          </View>
           <View
             style={[
               styles.funnelTarget,
@@ -308,12 +306,33 @@ const styles = StyleSheet.create({
   funnelRow: {
     width: "100%",
     alignItems: "center",
-    paddingTop: n(6),
+    paddingTop: n(10),
   },
   funnel: {
-    width: FUNNEL_TOP_HALF * 2 + n(64),
-    height: FUNNEL_HEIGHT,
+    width: FUNNEL_TOP_HALF * 2 + FUNNEL_SIDE_PAD * 2,
+    height: FUNNEL_HEIGHT + FUNNEL_RIM_HEIGHT / 2,
     position: "relative",
+  },
+  rim: {
+    position: "absolute",
+    top: 0,
+    left: FUNNEL_SIDE_PAD,
+    width: FUNNEL_TOP_HALF * 2,
+    height: FUNNEL_RIM_HEIGHT,
+    borderWidth: n(2),
+    borderRadius: FUNNEL_TOP_HALF,
+    opacity: 0.75,
+    zIndex: 2,
+  },
+  cone: {
+    position: "absolute",
+    top: FUNNEL_RIM_HEIGHT / 2,
+    left: FUNNEL_SIDE_PAD,
+    width: FUNNEL_TOP_HALF * 2,
+    height: FUNNEL_HEIGHT,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "flex-end",
   },
   funnelLayer: {
     position: "absolute",
@@ -325,20 +344,19 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   funnelBody: {
-    opacity: 0.14,
+    opacity: 0.1,
   },
   funnelWater: {
-    opacity: 0.32,
+    opacity: 0.28,
   },
-  funnelMark: {
+  rib: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  funnelMarkLine: {
-    height: n(1),
-    opacity: 0.45,
+    bottom: 0,
+    left: "50%",
+    width: n(2),
+    height: RIB_LENGTH,
+    marginLeft: n(-1),
+    transformOrigin: "50% 100%",
   },
   funnelTarget: {
     position: "absolute",
@@ -355,6 +373,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: n(4),
     fontSize: n(15),
-    opacity: 0.8,
+    opacity: 0.85,
   },
 });

@@ -5,6 +5,21 @@ import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { formatDuration } from "@/data/recipes";
 import { n } from "@/utils/scaling";
 
+// Render an elapsed duration with any trailing "s" unit shrunk, so a bare
+// seconds count like "12s" reads as a big number with a small unit.
+function ElapsedText({ seconds }: { seconds: number }) {
+  const text = formatDuration(seconds);
+  if (text.endsWith("s")) {
+    return (
+      <>
+        <StyledText style={styles.elapsed}>{text.slice(0, -1)}</StyledText>
+        <StyledText style={styles.elapsedUnit}>s</StyledText>
+      </>
+    );
+  }
+  return <StyledText style={styles.elapsed}>{text}</StyledText>;
+}
+
 interface BrewTimerProps {
   elapsed: number;
   onMeasureHeight?: (height: number) => void;
@@ -35,9 +50,7 @@ export function BrewTimer({
     >
       <View style={styles.bar}>
         <View style={styles.time}>
-          <StyledText style={styles.elapsed}>
-            {formatDuration(elapsed)}
-          </StyledText>
+          <ElapsedText seconds={elapsed} />
           {total > 0 ? (
             <StyledText style={styles.total}>
               {` / ${formatDuration(total)}`}
@@ -89,6 +102,10 @@ const styles = StyleSheet.create({
   },
   elapsed: {
     fontSize: n(40),
+  },
+  elapsedUnit: {
+    fontSize: n(22),
+    opacity: 0.7,
   },
   total: {
     fontSize: n(18),

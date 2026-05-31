@@ -1262,6 +1262,141 @@ export const recipes: Recipe[] = [
       { at: 75, instruction: "Top with hot water or milk and serve." },
     ],
   },
+  {
+    id: "cocoa-bomb",
+    name: "Cocoa Bomb",
+    author: "AeroPress classic",
+    blurb: "A comforting, cocoa-heavy cup with a thick body for dark roasts.",
+    roast: "dark",
+    grind: "medium",
+    orientation: "standard",
+    method: "aeropress",
+    coffeeGrams: 17,
+    waterGrams: 250,
+    waterTempC: 84,
+    c40Clicks: 24,
+    totalSeconds: 150,
+    steps: [
+      { instruction: "Rinse the filter and add 17g of medium ground coffee." },
+      { at: 0, instruction: "Pour 250g of water at 84C and stir twice." },
+      { at: 60, instruction: "Insert the plunger and let it steep." },
+      { at: 120, instruction: "Press gently over 25 seconds." },
+      { at: 150, instruction: "Serve." },
+    ],
+  },
+  {
+    id: "midnight-inverted",
+    name: "Midnight Inverted",
+    author: "AeroPress classic",
+    blurb:
+      "A long, low-temperature inverted steep that smooths out bold dark roasts.",
+    roast: "dark",
+    grind: "coarse",
+    orientation: "inverted",
+    method: "aeropress",
+    coffeeGrams: 20,
+    waterGrams: 220,
+    waterTempC: 80,
+    c40Clicks: 30,
+    totalSeconds: 195,
+    steps: [
+      { instruction: "Assemble inverted and add 20g of coarse ground coffee." },
+      { at: 0, instruction: "Pour 220g of water at 80C and stir 3 times." },
+      { at: 150, instruction: "Cap and flip onto the cup." },
+      { at: 170, instruction: "Press slowly over 25 seconds." },
+      { at: 195, instruction: "Stop at the hiss and serve." },
+    ],
+  },
+  {
+    id: "dark-latte-base",
+    name: "Dark Latte Base",
+    author: "Barista pick",
+    blurb:
+      "A thick dark-roast concentrate built to disappear under steamed milk.",
+    roast: "dark",
+    grind: "fine",
+    orientation: "inverted",
+    method: "aeropress",
+    coffeeGrams: 19,
+    waterGrams: 100,
+    waterTempC: 86,
+    c40Clicks: 13,
+    totalSeconds: 90,
+    steps: [
+      { instruction: "Assemble inverted and add 19g of fine ground coffee." },
+      { at: 0, instruction: "Pour 100g of water and stir well." },
+      { at: 45, instruction: "Cap and flip onto the cup." },
+      { at: 60, instruction: "Press firmly over 25 seconds." },
+      { at: 90, instruction: "Top with steamed milk to serve." },
+    ],
+  },
+  {
+    id: "campfire-dark",
+    name: "Campfire Dark",
+    author: "Everyday brew",
+    blurb: "A rugged, full-bodied mug for camp grinds and very dark roasts.",
+    roast: "dark",
+    grind: "coarse",
+    orientation: "standard",
+    method: "aeropress",
+    coffeeGrams: 16,
+    waterGrams: 240,
+    waterTempC: 82,
+    c40Clicks: 32,
+    totalSeconds: 165,
+    steps: [
+      { instruction: "Rinse the filter and add 16g of coarse ground coffee." },
+      { at: 0, instruction: "Pour 240g of water at 82C and stir once." },
+      { at: 120, instruction: "Swirl gently to settle the grounds." },
+      { at: 140, instruction: "Press slowly over 25 seconds." },
+      { at: 165, instruction: "Serve." },
+    ],
+  },
+  {
+    id: "espresso-romano",
+    name: "Espresso Romano",
+    author: "AeroPress classic",
+    blurb: "A short, intense dark shot finished with a twist of lemon.",
+    roast: "dark",
+    grind: "fine",
+    orientation: "standard",
+    method: "aeropress",
+    coffeeGrams: 18,
+    waterGrams: 70,
+    waterTempC: 90,
+    c40Clicks: 12,
+    totalSeconds: 45,
+    steps: [
+      { instruction: "Rinse the filter and add 18g of fine ground coffee." },
+      { at: 0, instruction: "Pour 70g of water and stir 5 times." },
+      { at: 15, instruction: "Seat the plunger." },
+      { at: 20, instruction: "Press firmly over 20 seconds." },
+      { at: 45, instruction: "Serve with a twist of lemon peel." },
+    ],
+  },
+  {
+    id: "honey-medium",
+    name: "Honey Medium",
+    author: "Barista pick",
+    blurb: "A honeyed, syrupy medium-roast cup with gentle agitation.",
+    roast: "medium",
+    grind: "medium",
+    orientation: "standard",
+    method: "aeropress",
+    coffeeGrams: 16,
+    waterGrams: 240,
+    waterTempC: 91,
+    c40Clicks: 23,
+    totalSeconds: 150,
+    steps: [
+      { instruction: "Rinse the filter and add 16g of medium ground coffee." },
+      { at: 0, instruction: "Add 40g to bloom and stir gently." },
+      { at: 30, instruction: "Pour to 240g total." },
+      { at: 90, instruction: "Insert the plunger and steep." },
+      { at: 130, instruction: "Press over 20 seconds." },
+      { at: 150, instruction: "Serve." },
+    ],
+  },
 ];
 
 export function getRecipe(id: string): Recipe | undefined {
@@ -1272,6 +1407,77 @@ export function getRecipe(id: string): Recipe | undefined {
 // and roast type are clear at a glance.
 export function recipeTypeLabel(recipe: Recipe): string {
   return `${METHOD_LABELS[recipe.method]} · ${ROAST_LABELS[recipe.roast]} roast`;
+}
+
+// Bounds for an adjusted coffee dose, in grams.
+export const MIN_COFFEE_GRAMS = 5;
+export const MAX_COFFEE_GRAMS = 60;
+
+const ROAST_ORDER: Record<Roast, number> = { light: 0, medium: 1, dark: 2 };
+// Water temperature offset applied per roast: lighter brews hotter, darker
+// cooler. Applied as a delta from the recipe's original roast/temp.
+const ROAST_TEMP_OFFSET: Record<Roast, number> = {
+  light: 0,
+  medium: -4,
+  dark: -8,
+};
+// Comandante clicks shift per roast step darker (coarser grind for dark roast).
+const ROAST_CLICK_STEP = 3;
+const GRIND_ORDER: Grind[] = ["fine", "medium", "coarse"];
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
+// Recompute a recipe for a new coffee dose and roast. Water tracks the dose at
+// the original ratio; temperature, grind and clicks shift with the roast; and
+// every gram/temperature amount written into the steps is rescaled to match.
+export function scaleRecipe(
+  original: Recipe,
+  coffeeGrams: number,
+  roast: Roast
+): Recipe {
+  const dose = clamp(
+    Math.round(coffeeGrams),
+    MIN_COFFEE_GRAMS,
+    MAX_COFFEE_GRAMS
+  );
+  const factor = dose / original.coffeeGrams;
+  const scaleGrams = (grams: number) => Math.round(grams * factor);
+  const roastShift = ROAST_ORDER[roast] - ROAST_ORDER[original.roast];
+  const waterTempC = clamp(
+    original.waterTempC +
+      ROAST_TEMP_OFFSET[roast] -
+      ROAST_TEMP_OFFSET[original.roast],
+    80,
+    100
+  );
+  const grindIndex = clamp(
+    GRIND_ORDER.indexOf(original.grind) + roastShift,
+    0,
+    GRIND_ORDER.length - 1
+  );
+  const c40Clicks = clamp(
+    original.c40Clicks + roastShift * ROAST_CLICK_STEP,
+    6,
+    40
+  );
+  const steps = original.steps.map((step) => ({
+    ...step,
+    instruction: step.instruction
+      .replace(/(\d+)g/g, (_match, grams) => `${scaleGrams(Number(grams))}g`)
+      .replace(/\d+C/g, () => `${waterTempC}C`),
+  }));
+  return {
+    ...original,
+    c40Clicks,
+    coffeeGrams: dose,
+    grind: GRIND_ORDER[grindIndex],
+    roast,
+    steps,
+    waterGrams: scaleGrams(original.waterGrams),
+    waterTempC,
+  };
 }
 
 export interface Category {
@@ -1294,31 +1500,32 @@ interface BrowseFacet {
   name: string;
 }
 
-const BROWSE_FACETS: BrowseFacet[] = [
+// AeroPress-specific browse lenses: the two chamber orientations plus
+// strength, size and roast cuts.
+const AEROPRESS_FACETS: BrowseFacet[] = [
   {
-    id: "espresso-short",
-    name: "Espresso & short",
-    blurb: "Small, intense concentrates",
+    id: "espresso",
+    name: "Espresso & concentrate",
+    blurb: "Small, intense shots",
     match: (recipe) => recipe.waterGrams <= 120,
   },
   {
-    id: "filter-style",
-    name: "Filter style",
-    blurb: "Clean, tea-like clarity",
-    match: (recipe) =>
-      recipe.orientation === "standard" && recipe.grind !== "fine",
+    id: "inverted",
+    name: "Inverted",
+    blurb: "Brewed upside-down",
+    match: (recipe) => recipe.orientation === "inverted",
+  },
+  {
+    id: "upright",
+    name: "Upright",
+    blurb: "Classic standard position",
+    match: (recipe) => recipe.orientation === "standard",
   },
   {
     id: "for-two",
     name: "For two",
-    blurb: "Bigger batches, 240g and up",
-    match: (recipe) => recipe.waterGrams >= 240,
-  },
-  {
-    id: "quick",
-    name: "Quick",
-    blurb: "Done in under two minutes",
-    match: (recipe) => recipe.totalSeconds < 120,
+    blurb: "Bigger batches to share",
+    match: (recipe) => recipe.waterGrams >= 300,
   },
   {
     id: "bold-dark",
@@ -1334,6 +1541,33 @@ const BROWSE_FACETS: BrowseFacet[] = [
   },
 ];
 
+// V60 browse lenses: pour-overs have no orientation, so cut by size and roast.
+const V60_FACETS: BrowseFacet[] = [
+  {
+    id: "for-two",
+    name: "For two",
+    blurb: "Bigger batches to share",
+    match: (recipe) => recipe.waterGrams >= 450,
+  },
+  {
+    id: "bold-dark",
+    name: "Bold & dark",
+    blurb: "Rich cups for darker roasts",
+    match: (recipe) => recipe.roast === "dark",
+  },
+  {
+    id: "light-bright",
+    name: "Light & bright",
+    blurb: "Delicate, fruity light roasts",
+    match: (recipe) => recipe.roast === "light",
+  },
+];
+
+const METHOD_FACETS: Record<BrewMethod, BrowseFacet[]> = {
+  aeropress: AEROPRESS_FACETS,
+  v60: V60_FACETS,
+};
+
 export const BROWSE_METHODS: BrewMethod[] = ["aeropress", "v60"];
 
 function buildCategories(): Category[] {
@@ -1347,7 +1581,7 @@ function buildCategories(): Category[] {
       method,
       match: (recipe) => recipe.method === method,
     });
-    for (const facet of BROWSE_FACETS) {
+    for (const facet of METHOD_FACETS[method]) {
       const match = (recipe: Recipe) =>
         recipe.method === method && facet.match(recipe);
       if (recipes.some(match)) {
