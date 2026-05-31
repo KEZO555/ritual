@@ -1,4 +1,4 @@
-package com.vandam.aeropresslight
+package com.vandam.ritual
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
