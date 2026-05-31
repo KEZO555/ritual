@@ -8,7 +8,7 @@ const fontPath = path.join(
 );
 registerFont(fontPath, { family: "PublicSans" });
 
-const width = 2572;
+const width = 3185;
 const height = 1048;
 const canvas = createCanvas(width, height);
 const ctx = canvas.getContext("2d");
@@ -41,7 +41,7 @@ iconCtx.fillText(firstLetter, iconSize / 2, iconY);
 
 const icon = iconCanvas;
 
-const screenshots = ["A", "B", "C", "D"];
+const screenshots = ["A", "B", "C", "D", "E"];
 const screenshotWidth = 573;
 const screenshotGap = 40;
 const screenshotY = 310;
