@@ -1479,6 +1479,38 @@ export const recipes: Recipe[] = [
       { at: 150, instruction: "Serve." },
     ],
   },
+  {
+    id: "lance-hedrick-dark-aeropress",
+    name: "Lance Hedrick Dark Roast AeroPress",
+    author: "Lance Hedrick",
+    blurb:
+      "A high-dose, low-temperature concentrate for decaf, dark, baked or aged coffee, diluted to taste after pressing.",
+    roast: "dark",
+    grind: "coarse",
+    orientation: "inverted",
+    method: "aeropress",
+    coffeeGrams: 30,
+    waterGrams: 120,
+    waterTempC: 80,
+    c40Clicks: 35,
+    totalSeconds: 120,
+    steps: [
+      {
+        instruction:
+          "Assemble the AeroPress inverted and add 30g of coarse coffee.",
+      },
+      {
+        at: 0,
+        instruction:
+          "Pour all 120g of water at once, then stir aggressively for 10 seconds.",
+      },
+      { at: 60, instruction: "Add the lid and press for about one minute." },
+      {
+        at: 120,
+        instruction: "Dilute with 80-120g of water to taste and serve.",
+      },
+    ],
+  },
 ];
 
 export function getRecipe(id: string): Recipe | undefined {
