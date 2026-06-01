@@ -9,6 +9,10 @@ export default function CustomiseScreen() {
         onPress={() => router.push("/settings/customise-interface" as Href)}
         text="Interface"
       />
+      <StyledButton
+        onPress={() => router.push("/settings/customise-brewing" as Href)}
+        text="Brewing"
+      />
     </ContentContainer>
   );
 }

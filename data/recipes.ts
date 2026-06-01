@@ -3,6 +3,25 @@ export type Grind = "fine" | "medium" | "coarse";
 export type Orientation = "standard" | "inverted";
 export type BrewMethod = "aeropress" | "v60";
 export type BrewTime = "short" | "medium" | "long";
+export type TempUnit = "C" | "F";
+
+// Recipes store water temperature in Celsius; convert for display per the
+// user's chosen unit.
+export function toDisplayTemp(celsius: number, unit: TempUnit): number {
+  return unit === "F" ? Math.round((celsius * 9) / 5 + 32) : celsius;
+}
+
+// Rewrite a "<n>C" temperature embedded in a step instruction to the chosen
+// unit (steps are authored/scaled in Celsius).
+export function convertStepTemps(instruction: string, unit: TempUnit): string {
+  if (unit === "C") {
+    return instruction;
+  }
+  return instruction.replace(
+    /(\d+)C/g,
+    (_match, celsius) => `${toDisplayTemp(Number(celsius), "F")}F`
+  );
+}
 
 export interface Step {
   // Elapsed time from brew start, in seconds. Omit for untimed prep steps.

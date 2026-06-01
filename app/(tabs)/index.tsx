@@ -1,10 +1,11 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import ContentContainer from "@/components/ContentContainer";
 import { HapticPressable } from "@/components/HapticPressable";
 import { StyledButton } from "@/components/StyledButton";
 import { StyledText } from "@/components/StyledText";
+import { useSettings } from "@/contexts/SettingsContext";
 import { useUserRecipes } from "@/contexts/UserRecipesContext";
 import {
   BROWSE_METHODS,
@@ -16,7 +17,13 @@ import { n } from "@/utils/scaling";
 
 export default function RecipesScreen() {
   const { userRecipes } = useUserRecipes();
-  const [method, setMethod] = useState<BrewMethod>("aeropress");
+  const { defaultMethod } = useSettings();
+  const [method, setMethod] = useState<BrewMethod>(defaultMethod);
+
+  // Adopt the saved default tab once the persisted setting has hydrated.
+  useEffect(() => {
+    setMethod(defaultMethod);
+  }, [defaultMethod]);
 
   const recipesForMethod = userRecipes.filter(
     (recipe) => recipe.method === method

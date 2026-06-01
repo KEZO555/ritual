@@ -20,8 +20,10 @@ import { StyledText } from "@/components/StyledText";
 import { SwipeBackContainer } from "@/components/SwipeBackContainer";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
+import { useSettings } from "@/contexts/SettingsContext";
 import { useUserRecipes } from "@/contexts/UserRecipesContext";
 import {
+  convertStepTemps,
   formatDuration,
   GRIND_LABELS,
   getRecipe,
@@ -30,6 +32,7 @@ import {
   ROAST_LABELS,
   type Roast,
   scaleRecipe,
+  toDisplayTemp,
 } from "@/data/recipes";
 import { useBrewTimer } from "@/hooks/useBrewTimer";
 import { useScrollIndicator } from "@/hooks/useScrollIndicator";
@@ -98,10 +101,21 @@ export default function RecipeScreen() {
       recipe.roast !== original.roast);
 
   const { invertColors } = useInvertColors();
+  const { keepAwake, tempUnit } = useSettings();
   const { width } = useWindowDimensions();
   const { elapsed, running, activeIndex, toggle, reset, seek, total } =
     useBrewTimer(steps, recipe?.totalSeconds ?? 0);
   const [showNoScale, setShowNoScale] = useState(false);
+
+  // Steps are authored in Celsius; convert any embedded temperatures for display.
+  const displaySteps = useMemo(
+    () =>
+      steps.map((step) => ({
+        ...step,
+        instruction: convertStepTemps(step.instruction, tempUnit),
+      })),
+    [steps, tempUnit]
+  );
 
   const {
     handleScroll,
@@ -126,16 +140,17 @@ export default function RecipeScreen() {
     buzzedIndex.current = activeIndex;
   }, [running, activeIndex]);
 
-  // Keep the screen awake while the timer counts so the brew stays visible.
+  // Keep the screen awake while the timer counts so the brew stays visible,
+  // unless the user has turned the setting off.
   useEffect(() => {
-    if (!running) {
+    if (!(running && keepAwake)) {
       return;
     }
     activateKeepAwakeAsync(KEEP_AWAKE_TAG);
     return () => {
       deactivateKeepAwake(KEEP_AWAKE_TAG);
     };
-  }, [running]);
+  }, [running, keepAwake]);
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     scrollOffset.current = event.nativeEvent.contentOffset.y;
@@ -291,7 +306,11 @@ export default function RecipeScreen() {
             <View style={[styles.row, styles.specs]}>
               <Spec label="Water" value={`${recipe.waterGrams}g`} />
               <Spec label="Ratio" value={ratio === null ? "-" : `1:${ratio}`} />
-              <Spec label="Temp" unit="C" value={`${recipe.waterTempC}`} />
+              <Spec
+                label="Temp"
+                unit={tempUnit}
+                value={`${toDisplayTemp(recipe.waterTempC, tempUnit)}`}
+              />
               <Spec label="Time" value={formatDuration(recipe.totalSeconds)} />
               <Spec label="Method" value={METHOD_LABELS[recipe.method]} />
               <Spec label="Grind" value={GRIND_LABELS[recipe.grind]} />
@@ -332,7 +351,7 @@ export default function RecipeScreen() {
               onStepRef={(index, node) => {
                 stepRefs.current[index] = node;
               }}
-              steps={recipe.steps}
+              steps={displaySteps}
             />
             <View style={styles.bottomSpacer} />
           </Animated.ScrollView>

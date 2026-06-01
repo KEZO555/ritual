@@ -7,6 +7,7 @@ import {
   InvertColorsProvider,
   useInvertColors,
 } from "@/contexts/InvertColorsContext";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 import { UserRecipesProvider } from "@/contexts/UserRecipesContext";
 
 function RootLayout() {
@@ -29,14 +30,16 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <InvertColorsProvider>
-        <FavoritesProvider>
-          <UserRecipesProvider>
-            <FiltersProvider>
-              <StatusBar hidden />
-              <RootLayout />
-            </FiltersProvider>
-          </UserRecipesProvider>
-        </FavoritesProvider>
+        <SettingsProvider>
+          <FavoritesProvider>
+            <UserRecipesProvider>
+              <FiltersProvider>
+                <StatusBar hidden />
+                <RootLayout />
+              </FiltersProvider>
+            </UserRecipesProvider>
+          </FavoritesProvider>
+        </SettingsProvider>
       </InvertColorsProvider>
     </GestureHandlerRootView>
   );
