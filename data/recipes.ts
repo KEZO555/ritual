@@ -23,6 +23,69 @@ export function convertStepTemps(instruction: string, unit: TempUnit): string {
   );
 }
 
+// Hand grinders the no-scale guide can target. Recipes store Comandante C40
+// clicks; other grinders are an APPROXIMATE conversion via published
+// microns-per-click figures (burrs/stepping differ, so treat them as a
+// starting point and dial in to taste).
+export interface Grinder {
+  clicksLabel: string;
+  id: string;
+  micronsPerClick: number;
+  name: string;
+}
+
+export const GRINDERS: Grinder[] = [
+  {
+    id: "c40",
+    name: "Comandante C40",
+    clicksLabel: "C40 clicks",
+    micronsPerClick: 30,
+  },
+  {
+    id: "nano",
+    name: "Timemore Nano",
+    clicksLabel: "Nano clicks",
+    micronsPerClick: 24,
+  },
+  {
+    id: "c3",
+    name: "Timemore Chestnut C3",
+    clicksLabel: "C3 clicks",
+    micronsPerClick: 26,
+  },
+  {
+    id: "jx-pro",
+    name: "1Zpresso JX-Pro",
+    clicksLabel: "JX-Pro clicks",
+    micronsPerClick: 12.5,
+  },
+  {
+    id: "j-max",
+    name: "1Zpresso J-Max",
+    clicksLabel: "J-Max clicks",
+    micronsPerClick: 8.8,
+  },
+  {
+    id: "k6",
+    name: "KINGrinder K6",
+    clicksLabel: "K6 clicks",
+    micronsPerClick: 12,
+  },
+];
+
+const C40_MICRONS_PER_CLICK = GRINDERS[0].micronsPerClick;
+
+export function getGrinder(id: string): Grinder {
+  return GRINDERS.find((grinder) => grinder.id === id) ?? GRINDERS[0];
+}
+
+// Approximate the chosen grinder's click count from a recipe's C40 clicks.
+export function grinderClicks(c40Clicks: number, grinder: Grinder): number {
+  return Math.round(
+    (c40Clicks * C40_MICRONS_PER_CLICK) / grinder.micronsPerClick
+  );
+}
+
 export interface Step {
   // Elapsed time from brew start, in seconds. Omit for untimed prep steps.
   at?: number;

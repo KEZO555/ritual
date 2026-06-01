@@ -4,9 +4,11 @@ import { usePersistedState } from "@/hooks/usePersistedState";
 import { setHapticsEnabled as syncHapticsEnabled } from "@/utils/haptics";
 
 interface SettingsContextType {
+  defaultGrinder: string;
   defaultMethod: BrewMethod;
   hapticsEnabled: boolean;
   keepAwake: boolean;
+  setDefaultGrinder: (value: string) => Promise<void>;
   setDefaultMethod: (value: BrewMethod) => Promise<void>;
   setHapticsEnabled: (value: boolean) => Promise<void>;
   setKeepAwake: (value: boolean) => Promise<void>;
@@ -19,9 +21,11 @@ const throwOutsideProvider = () => {
 };
 
 const SettingsContext = createContext<SettingsContextType>({
+  defaultGrinder: "c40",
   defaultMethod: "aeropress",
   hapticsEnabled: true,
   keepAwake: true,
+  setDefaultGrinder: throwOutsideProvider,
   setDefaultMethod: throwOutsideProvider,
   setHapticsEnabled: throwOutsideProvider,
   setKeepAwake: throwOutsideProvider,
@@ -42,6 +46,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     "defaultMethod",
     "aeropress"
   );
+  const [defaultGrinder, setDefaultGrinder] = usePersistedState(
+    "defaultGrinder",
+    "c40"
+  );
 
   // Mirror the haptics setting into the plain util module the press handlers use.
   useEffect(() => {
@@ -51,9 +59,11 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   return (
     <SettingsContext.Provider
       value={{
+        defaultGrinder,
         defaultMethod,
         hapticsEnabled,
         keepAwake,
+        setDefaultGrinder,
         setDefaultMethod,
         setHapticsEnabled,
         setKeepAwake,

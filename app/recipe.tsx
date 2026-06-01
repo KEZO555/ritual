@@ -26,7 +26,9 @@ import {
   convertStepTemps,
   formatDuration,
   GRIND_LABELS,
+  getGrinder,
   getRecipe,
+  grinderClicks,
   METHOD_LABELS,
   ORIENTATION_LABELS,
   ROAST_LABELS,
@@ -101,7 +103,8 @@ export default function RecipeScreen() {
       recipe.roast !== original.roast);
 
   const { invertColors } = useInvertColors();
-  const { keepAwake, tempUnit } = useSettings();
+  const { defaultGrinder, keepAwake, tempUnit } = useSettings();
+  const grinder = getGrinder(defaultGrinder);
   const { width } = useWindowDimensions();
   const { elapsed, running, activeIndex, toggle, reset, seek, total } =
     useBrewTimer(steps, recipe?.totalSeconds ?? 0);
@@ -320,7 +323,14 @@ export default function RecipeScreen() {
                   value={ORIENTATION_LABELS[recipe.orientation]}
                 />
               ) : null}
-              <Spec label="C40 clicks" value={`${recipe.c40Clicks}`} />
+              <Spec
+                label={grinder.clicksLabel}
+                value={
+                  grinder.id === "c40"
+                    ? `${recipe.c40Clicks}`
+                    : `~${grinderClicks(recipe.c40Clicks, grinder)}`
+                }
+              />
             </View>
             <HapticPressable
               onPress={() => setShowNoScale((value) => !value)}
