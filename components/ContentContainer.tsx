@@ -1,4 +1,4 @@
-import type { MaterialIcons } from "@expo/vector-icons";
+import type MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useSegments } from "expo-router";
 import type { ReactNode, RefObject } from "react";
 import { Animated, type ScrollView, StyleSheet, View } from "react-native";

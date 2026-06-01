@@ -1,3 +1,4 @@
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -56,6 +57,7 @@ function Spec({
 }
 
 const ROASTS: Roast[] = ["light", "medium", "dark"];
+const KEEP_AWAKE_TAG = "brew-timer";
 
 export default function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -123,6 +125,17 @@ export default function RecipeScreen() {
     }
     buzzedIndex.current = activeIndex;
   }, [running, activeIndex]);
+
+  // Keep the screen awake while the timer counts so the brew stays visible.
+  useEffect(() => {
+    if (!running) {
+      return;
+    }
+    activateKeepAwakeAsync(KEEP_AWAKE_TAG);
+    return () => {
+      deactivateKeepAwake(KEEP_AWAKE_TAG);
+    };
+  }, [running]);
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     scrollOffset.current = event.nativeEvent.contentOffset.y;

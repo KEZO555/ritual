@@ -1,4 +1,4 @@
-import { MaterialIcons } from "@expo/vector-icons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
   type KeyboardTypeOptions,
   type ReturnKeyTypeOptions,
