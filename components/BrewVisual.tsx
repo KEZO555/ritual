@@ -7,7 +7,9 @@ import { n } from "@/utils/scaling";
 // Reference points used to brew without a scale.
 const AEROPRESS_GRAMS_PER_SCOOP = 11; // level AeroPress scoop of beans
 const V60_GRAMS_PER_SCOOP = 12; // level Hario V60 measuring scoop
-const ML_PER_CHAMBER_NUMBER = 60; // approx water per molded chamber number
+// Calibrated against a real chamber: 200g of water sits at the ③ mark, so each
+// molded number is ~66.7ml and ④ is roughly the brim.
+const ML_PER_CHAMBER_NUMBER = 200 / 3;
 const CHAMBER_NUMBERS = [1, 2, 3, 4];
 const CIRCLED = ["①", "②", "③", "④"];
 const FUNNEL_CAPACITY_STEP = 100; // round the drawn capacity up to the next 100ml
@@ -55,13 +57,6 @@ function quarterLabel(value: number): string {
     return glyph || "0";
   }
   return `${whole}${glyph}`;
-}
-
-function halfLabel(value: number): string {
-  const rounded = Math.round(value * 2) / 2;
-  const whole = Math.floor(rounded);
-  const frac = rounded - whole;
-  return frac === 0.5 ? `${whole}½` : `${whole}`;
 }
 
 function scoopRow(coffeeGrams: number, gramsPerScoop: number, label: string) {
@@ -117,10 +112,12 @@ function AeroPressVisual({
     "level AeroPress scoop"
   );
   // The chamber is only numbered to ④, so a larger brew can't name a mark.
+  // Otherwise name the fill height to the nearest quarter mark so the label
+  // matches the drawn water line.
   const overCapacity = waterGrams > chamberCapacity;
   const chamberTarget = overCapacity
     ? "the top"
-    : halfLabel(waterGrams / ML_PER_CHAMBER_NUMBER);
+    : quarterLabel(waterGrams / ML_PER_CHAMBER_NUMBER);
   const fillFraction = Math.min(waterGrams / chamberCapacity, 1);
 
   return (
