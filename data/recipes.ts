@@ -103,6 +103,8 @@ export interface Recipe {
   // The brewer this recipe is written for.
   method: BrewMethod;
   name: string;
+  // Optional brewing notes/tips from the source (e.g. recommended coffee).
+  notes?: string;
   // AeroPress chamber orientation. Omitted for methods without one (e.g. V60).
   orientation?: Orientation;
   roast: Roast;
@@ -170,6 +172,8 @@ export const recipes: Recipe[] = [
     author: "James Hoffmann",
     blurb:
       "A simple recipe that throws away AeroPress misconceptions like rinsing the filter and preheating.",
+    notes:
+      "Match the water temperature to the roast — a little cooler for darker roasts. Resting the plunger about 1cm in makes a vacuum that stops the coffee dripping through as it steeps.",
     roast: "light",
     grind: "medium",
     orientation: "standard",
@@ -200,6 +204,8 @@ export const recipes: Recipe[] = [
     author: "Sigit Tri",
     blurb:
       "A balanced, sweet cup designed to work across most coffee processes while avoiding under-extraction.",
+    notes:
+      "Works across almost any coffee process for a balanced, sweet cup that avoids under-extraction. Want more extraction? Add a few extra stirs or lengthen the bloom.",
     roast: "light",
     grind: "coarse",
     orientation: "inverted",
@@ -225,6 +231,8 @@ export const recipes: Recipe[] = [
     author: "James Hoffmann",
     blurb:
       "A concentrated espresso-style shot built to be topped with warm milk for a milk-based drink.",
+    notes:
+      "Best with a darker roast or espresso blend. Press all the way through, past the bubbling hiss, to get every drop.",
     roast: "dark",
     grind: "fine",
     orientation: "inverted",
@@ -260,6 +268,8 @@ export const recipes: Recipe[] = [
     author: "Kata Muhel",
     blurb:
       "A recipe that brings out the acidy fruitiness of a vibrant light-roast coffee.",
+    notes:
+      "Use a vibrant light roast for bright, fruity, acidic cups. Brew through rinsed double paper filters.",
     roast: "light",
     grind: "medium",
     orientation: "inverted",
@@ -289,6 +299,8 @@ export const recipes: Recipe[] = [
     author: "Tim Wendelboe",
     blurb:
       "The clean, light-roast recipe served at Tim Wendelboe's cafe in Oslo.",
+    notes:
+      "Use a light roast. Stir exactly three times — fewer under-extracts, more over-extracts.",
     roast: "light",
     grind: "medium",
     orientation: "standard",
@@ -322,6 +334,8 @@ export const recipes: Recipe[] = [
     name: "Smooooothy!",
     author: "AmirHossein Adib",
     blurb: "A smooth, sweet and balanced cup tuned for East African coffees.",
+    notes:
+      "Best with East African beans (Ethiopia, Kenya). Bloom for 30 seconds, then a single gentle stir for a smooth, balanced cup.",
     roast: "light",
     grind: "medium",
     orientation: "standard",
@@ -354,6 +368,8 @@ export const recipes: Recipe[] = [
     author: "Mark C",
     blurb:
       "Dark chocolate, sandalwood and umami seaweed - full bodied with a good kick over ice and milk.",
+    notes:
+      "Suits dark, full-bodied beans like Monsooned Malabar. Stir continuously through the first 40 seconds, then press straight onto the ice and milk.",
     roast: "dark",
     grind: "medium",
     orientation: "inverted",
@@ -391,6 +407,8 @@ export const recipes: Recipe[] = [
     name: "The only AeroPress recipe you'll ever need",
     author: "The Coffee Compass",
     blurb: "A simple, versatile and economical everyday recipe.",
+    notes:
+      "Any coffee works. Use a true medium grind and double paper filters to cut sediment, and re-seal the crust at 1:00 for even extraction.",
     roast: "medium",
     grind: "medium",
     orientation: "standard",
@@ -424,6 +442,8 @@ export const recipes: Recipe[] = [
     name: "Two Big Cups - One Brew",
     author: "Niklas",
     blurb: "A larger brew for sharing with a friend or filling a thermos.",
+    notes:
+      "Great with light roasts like Yirgacheffe. Use 2-3 paper filters for lighter roasts, preheat everything, and top with hot water Americano-style.",
     roast: "light",
     grind: "medium",
     orientation: "standard",
@@ -457,6 +477,8 @@ export const recipes: Recipe[] = [
     name: "V60 Style Aeropress (light roast)",
     author: "skelathon0703",
     blurb: "A V60-style clean brew using a light roast and no bloom.",
+    notes:
+      "For light roasts: two paper filters, no bloom, no stir. Steep, then stop pressing before the hiss to avoid over-extraction.",
     roast: "light",
     grind: "fine",
     orientation: "standard",
@@ -492,6 +514,8 @@ export const recipes: Recipe[] = [
     name: "AeroPress Espresso",
     author: "Coffee Lovers TV",
     blurb: "An espresso-style shot using a fine grind and high pressure.",
+    notes:
+      "Medium-dark roast and a fine grind. Pressure is everything — stir to saturate, then plunge as fast as you can. A metal filter is worth a try.",
     roast: "dark",
     grind: "fine",
     orientation: "standard",
@@ -521,6 +545,8 @@ export const recipes: Recipe[] = [
     author: "Damaring Kalpika",
     blurb:
       "A sweet, clean cup with bright acidity, refined from a championship method.",
+    notes:
+      "Use sweet, honey-processed beans (e.g. Gayo or Sumatra). Double-filter and add the final water as a bypass after a slow press to keep it clean and sweet.",
     roast: "light",
     grind: "medium",
     orientation: "inverted",
@@ -1485,6 +1511,8 @@ export const recipes: Recipe[] = [
     author: "Lance Hedrick",
     blurb:
       "A high-dose, low-temperature concentrate for decaf, dark, baked or aged coffee, diluted to taste after pressing.",
+    notes:
+      "Built for decaf, dark, baked, or past-prime coffee. Stir aggressively, give it a long steep, then dilute to taste after pressing.",
     roast: "dark",
     grind: "coarse",
     orientation: "inverted",

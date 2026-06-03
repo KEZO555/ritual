@@ -354,6 +354,16 @@ export default function RecipeScreen() {
                 />
               ) : null}
             </View>
+            {recipe.notes ? (
+              <>
+                <StyledText style={[styles.row, styles.sectionTitle]}>
+                  Notes
+                </StyledText>
+                <StyledText style={[styles.row, styles.notes]}>
+                  {recipe.notes}
+                </StyledText>
+              </>
+            ) : null}
             <StyledText style={[styles.row, styles.sectionTitle]}>
               Steps
             </StyledText>
@@ -421,6 +431,11 @@ const styles = StyleSheet.create({
   blurb: {
     fontSize: n(20),
     lineHeight: n(28),
+  },
+  notes: {
+    fontSize: n(18),
+    lineHeight: n(26),
+    opacity: 0.75,
   },
   adjust: {
     width: "100%",

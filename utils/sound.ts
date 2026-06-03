@@ -17,6 +17,7 @@ export const playStepSound = () => {
   }
   if (!player) {
     player = createAudioPlayer(require("@/assets/sounds/step.wav"));
+    player.volume = 0.35;
   }
   player.seekTo(0);
   player.play();
