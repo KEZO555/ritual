@@ -1664,6 +1664,14 @@ const AEROPRESS_FACETS: BrowseFacet[] = [
     match: (recipe) => recipe.orientation === "standard",
   },
   {
+    id: "go",
+    name: "AeroPress Go",
+    blurb: "Single-serve brews that fit the Go",
+    // The Go's chamber comfortably holds up to the ④ mark (~240ml); larger
+    // batches need the full-size brewer or a separate server.
+    match: (recipe) => recipe.waterGrams <= 240,
+  },
+  {
     id: "for-two",
     name: "For two",
     blurb: "Bigger batches to share",
